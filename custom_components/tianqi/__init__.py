@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, State, ServiceCall, SupportsRespon
 from homeassistant.helpers.entity import Entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import aiohttp_client
-from homeassistant.exceptions import IntegrationError
+from homeassistant.exceptions import ConfigEntryNotReady, IntegrationError
 from homeassistant.helpers.device_registry import DeviceInfo, DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -138,8 +138,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, client.unload)
         )
 
-    await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
     await client.init()
+    await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
     return ret
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
@@ -362,7 +362,15 @@ class TianqiClient:
 
             remove_listener = coord.async_add_listener(coordinator_handler)
             self._remove_listeners.append(remove_listener)
-            await coord.async_config_entry_first_refresh()
+            try:
+                await coord.async_config_entry_first_refresh()
+            except ConfigEntryNotReady:
+                if coord.name != 'minutely':
+                    raise
+                _LOGGER.warning(
+                    'Unable to fetch minutely forecast; continuing setup without it',
+                    exc_info=True,
+                )
 
     def add_converter(self, conv: Converter):
         self.converters[conv.attr] = conv
@@ -622,6 +630,7 @@ class TianqiClient:
 
         self.data['minutely'] = json.loads(txt) or {}
         self.push_state(self.decode(self.data['minutely']))
+        await self.update_entities()
 
         return self.data
 
