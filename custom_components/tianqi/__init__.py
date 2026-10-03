@@ -29,6 +29,7 @@ from homeassistant.helpers.device_registry import DeviceInfo, DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .converters.base import *
+from .timestamps import parse_provider_timestamp
 
 
 DOMAIN = 'tianqi'
@@ -637,7 +638,7 @@ class TianqiClient:
             lst = rdt.get('od2') or []
             lst.reverse()
             try:
-                stm = datetime.strptime(rdt.get('od0', ''), fmt)
+                stm = parse_provider_timestamp(rdt.get('od0', ''))
             except ValueError as exc:
                 dat = {
                     'error': str(exc),

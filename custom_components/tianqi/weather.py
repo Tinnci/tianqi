@@ -37,6 +37,7 @@ except (ModuleNotFoundError, ImportError):
     WeatherEntityFeature = None
 
 from . import DOMAIN, TianqiClient, async_add_setuper, HTTP_REFERER
+from .timestamps import parse_provider_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -240,7 +241,7 @@ class WeatherEntity(BaseEntity):
             if observe:
                 row['native_precipitation'] = observe.get('rain')
             try:
-                day = datetime.strptime(ymd, '%Y%m%d%H%M')
+                day = parse_provider_timestamp(ymd)
                 tim = dt.now().replace(
                     month=day.month, day=day.day, hour=day.hour,
                     minute=0, second=0, microsecond=0,
