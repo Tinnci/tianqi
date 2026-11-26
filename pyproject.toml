@@ -10,7 +10,8 @@ package = false
 dev = ["pytest>=9.0.3,<10", "ruff>=0.11,<1"]
 
 [tool.ruff]
-include = ["tests/**/*.py", "custom_components/tianqi/timestamps.py"]
+include = ["tests/**/*.py", "custom_components/tianqi/client.py"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/test_timestamps.py" = ["DTZ001"] # Expected provider-local calendar values.
+"custom_components/tianqi/client.py" = ["DTZ007"] # Upstream parses provider-local timestamps.
